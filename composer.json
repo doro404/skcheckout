@@ -1,0 +1,15 @@
+{
+    "name": "seu-nome/pix-payment-system",
+    "description": "Sistema de Pagamento PIX com Mercado Pago",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "mercadopago/dx-php": "^2.5",
+        "phpmailer/phpmailer": "^6.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

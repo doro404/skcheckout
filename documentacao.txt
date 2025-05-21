@@ -1,0 +1,178 @@
+DOCUMENTAÇÃO DO SISTEMA DE PAGAMENTOS PIX
+
+1. VISÃO GERAL
+==============
+Sistema de pagamentos via PIX com suporte a múltiplos comerciantes, produtos digitais e físicos, e callbacks dinâmicos.
+
+2. ESTRUTURA DO BANCO DE DADOS
+=============================
+
+2.1 Tabela merchants (Comerciantes)
+----------------------------------
+- id: ID único do comerciante
+- name: Nome do comerciante
+- email: Email do comerciante
+- webhook_url: URL para notificações de pagamento
+- default_callback_url: URL padrão de retorno após pagamento
+- use_dynamic_callback: Flag para habilitar retorno dinâmico (0/1)
+
+2.2 Tabela products (Produtos)
+-----------------------------
+- id: ID único do produto
+- merchant_id: ID do comerciante (FK)
+- name: Nome do produto
+- description: Descrição do produto
+- price: Preço do produto (decimal 10,2)
+- status: Status do produto (active/inactive/cancelled)
+- type: Tipo do produto (ebook/curso/software/assinatura/outro)
+- delivery_type: Tipo de entrega (download/email/acesso_online)
+- file_path: Caminho do arquivo (para produtos digitais)
+- file_name: Nome original do arquivo
+- product_callback_url: URL de retorno específica do produto
+- use_custom_callback: Flag para usar URL de retorno própria (0/1)
+- created_at: Data de criação
+- updated_at: Data de atualização
+
+2.3 Tabela transactions (Transações)
+----------------------------------
+- id: ID único da transação
+- merchant_id: ID do comerciante (FK)
+- product_id: ID do produto (FK)
+- amount: Valor da transação
+- status: Status da transação
+- pix_code: Código PIX gerado
+- payer_name: Nome do pagador
+- payer_email: Email do pagador
+- payer_document: Documento do pagador (CPF)
+- created_at: Data de criação
+- updated_at: Data de atualização
+
+2.4 Tabela system_settings (Configurações)
+----------------------------------------
+- setting_key: Chave da configuração
+- setting_value: Valor da configuração
+- setting_description: Descrição da configuração
+- is_public: Se a configuração é pública (0/1)
+
+3. ENDPOINTS PRINCIPAIS
+=====================
+
+3.1 Página de Pagamento
+----------------------
+URL: /payment.php
+Método: GET
+Parâmetros:
+- amount: Valor do pagamento
+- product_id: ID do produto
+- merchant_id: ID do comerciante
+- product_name: Nome do produto
+- merchant_name: Nome do comerciante
+- callback_url: URL de retorno (opcional)
+- product_image: URL da imagem do produto (opcional)
+
+3.2 Processamento de Pagamento
+----------------------------
+URL: /process_payment.php
+Método: POST
+Parâmetros:
+- product_id: ID do produto
+- merchant_id: ID do comerciante
+- name: Nome do comprador
+- lastname: Sobrenome do comprador
+- cpf: CPF do comprador
+- phone: Telefone do comprador
+- email: Email do comprador
+- address: Endereço completo
+- callback_url: URL de retorno
+
+4. SISTEMA DE CALLBACK
+=====================
+
+4.1 Prioridade de URLs de Retorno
+--------------------------------
+1. URL específica do produto (se configurada)
+2. URL dinâmica via Referer (se ativada)
+3. URL padrão do comerciante
+
+4.2 Webhook para Notificações
+---------------------------
+- Envia POST para webhook_url do comerciante
+- Inclui detalhes da transação e status do pagamento
+- Requer HTTPS em ambiente de produção
+
+5. PAINEL ADMINISTRATIVO
+=======================
+
+5.1 Gestão de Produtos
+---------------------
+- Listagem com filtros e ordenação
+- Cadastro de produtos
+- Edição de produtos
+- Cancelamento/Inativação
+- Exclusão permanente (apenas produtos cancelados)
+
+5.2 Configurações
+---------------
+- Configurações gerais do comerciante
+- URLs de callback e webhook
+- Ativação de callback dinâmico
+- Configurações específicas por produto
+
+5.3 Transações
+------------
+- Listagem de transações
+- Filtros por status e período
+- Detalhes do pagador
+- Status do pagamento
+
+6. SEGURANÇA
+============
+- Validação de URLs de callback
+- Proteção contra CSRF
+- Validação de sessão
+- Sanitização de inputs
+- Logs de erros e ações
+- Transações em banco de dados
+- Verificação de permissões
+
+7. REQUISITOS TÉCNICOS
+=====================
+- PHP 7.4 ou superior
+- MySQL 5.7 ou superior
+- SSL/HTTPS em produção
+- Extensões PHP:
+  * PDO
+  * curl
+  * json
+  * openssl
+
+8. INTEGRAÇÃO
+============
+Para integrar o sistema em seu site:
+
+1. Gere o link de pagamento:
+   https://seu-site.com/payment.php?amount=XX.XX&product_id=XX&merchant_id=XX&product_name=NOME&merchant_name=NOME
+
+2. Adicione parâmetros opcionais:
+   - callback_url: URL de retorno após pagamento
+   - product_image: URL da imagem do produto
+
+3. Configure o webhook para receber notificações de pagamento
+
+4. Implemente a página de retorno para processar o status do pagamento
+
+9. AMBIENTE DE DESENVOLVIMENTO
+============================
+- URL base: http://localhost/
+- Banco de dados: MySQL local
+- Modo debug ativado
+- Logs detalhados
+- HTTPS não obrigatório
+
+10. AMBIENTE DE PRODUÇÃO
+=======================
+- HTTPS obrigatório
+- Logs de erro configurados
+- Debug desativado
+- Validações estritas de callback
+- Monitoramento de transações 
